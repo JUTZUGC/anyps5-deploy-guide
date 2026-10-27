@@ -1,0 +1,108 @@
+{
+  "owner": "JUTZUGC",
+  "code": "JUTZUGC",
+  "project": {
+    "key": "anyps5",
+    "nameCn": "AnyPS5",
+    "repoName": "anyps5-deploy-guide",
+    "oneLiner": "48.7k stars，GPL-2.0，把 PS5 可执行文件直接重链接到 Windows/Linux/macOS，不走模拟器",
+    "officialRepo": "https://github.com/boykopovar/AnyPS5",
+    "officialDocs": "https://github.com/boykopovar/AnyPS5#usage",
+    "stars": "48.7k",
+    "license": "GPL-2.0",
+    "highlights": [
+      "不走模拟器：直接重链接 PS5 ELF 到 PC 原生格式，没有模拟层开销",
+      "系统库覆盖约 87%：持续开发中，社区贡献活跃",
+      "Shader 100%：AMD RDNA 1/2 全部 shader 指令已实现",
+      "Web 转换器：boykopovar.github.io/AnyPS5 浏览器端直接转",
+      "SDL 输入：支持手柄（含 Analog）、键盘、鼠标",
+      "性能覆盖层：F10 切换，实时看 FPS、帧时间、GPU/CPU 占用"
+    ],
+    "mcpSupport": "AnyPS5 没有 MCP server，是纯本地工具。本仓库不提供 MCP 注册。",
+    "webuiUrl": "",
+    "adapterPorts": "",
+    "collectedAt": "2026-10-27",
+    "verification": [
+      [
+        "Release v0.1.3 的 Windows 包 SHA256 a0d6ce41...6d0e0 与 Release 记录一致（92.2 MB）",
+        "已核对 2026-10-27"
+      ],
+      [
+        "Release v0.1.3 的 Linux 包 SHA256 017bdb0e...811f3 与 Release 记录一致（97.3 MB）",
+        "已核对 2026-10-27"
+      ],
+      [
+        "relinker Windows 二进制 SHA256 c0de554b...8d021 与 Release 记录一致（5.2 MB）",
+        "已核对 2026-10-27"
+      ],
+      [
+        "未实测运行（本机无正版 PS5 游戏的 ELF/SELF 可执行文件）",
+        "说明 2026-10-27"
+      ],
+      [
+        "Discord 社区明确禁止使用盗版游戏",
+        "已核对 2026-10-27"
+      ]
+    ],
+    "deploy": {
+      "type": "binary",
+      "steps": [
+        "if [ \"$(uname -s)\" = \"Darwin\" ]; then echo 'macOS 只有 relinker 二进制，没有 prx 库包' ; curl -fL -o relinker https://github.com/boykopovar/AnyPS5/releases/download/v0.1.3/relinker-v0.1.3 ; chmod +x relinker ; mkdir -p \"$HOME/.local/bin\" ; mv relinker \"$HOME/.local/bin/anyps5-relinker\" ; elif [ \"$(uname -s)\" = \"Linux\" ]; then url=https://github.com/boykopovar/AnyPS5/releases/download/v0.1.3/prx-linux-v0.1.3.zip ; want=017bdb0e931fa0cdb17f0cea805a824180b88205f5c50f4473550c63a4e811f3 ; curl -fL -o anyps5.zip \"$url\" ; echo \"$want  anyps5.zip\" | sha256sum -c - ; mkdir -p \"$HOME/.local/share/anyps5/prx\" ; unzip -q anyps5.zip -d \"$HOME/.local/share/anyps5/prx\" ; curl -fL -o relinker https://github.com/boykopovar/AnyPS5/releases/download/v0.1.3/relinker-v0.1.3 ; chmod +x relinker ; mkdir -p \"$HOME/.local/bin\" ; mv relinker \"$HOME/.local/bin/anyps5-relinker\" ; else echo '不支持的系统' ; exit 1 ; fi",
+        "export PATH=\"$HOME/.local/bin:$PATH\" ; anyps5-relinker --help >/dev/null 2>&1 && echo 'AnyPS5 部署完成' || echo 'relinker 未安装成功，检查 ~/.local/bin/anyps5-relinker'"
+      ],
+      "stepsPs": [
+        "curl.exe -L --fail -o anyps5.zip https://github.com/boykopovar/AnyPS5/releases/download/v0.1.3/prx-windows-v0.1.3.zip",
+        "$h = (Get-FileHash -Algorithm SHA256 anyps5.zip).Hash.ToLower() ; if ($h -ne 'a0d6ce41859368f7be43bb7ceefda8542f9abaaa80f16d157a1847287d46d0e0') { throw \"SHA256 校验失败，文件可能不完整，请重试\" }",
+        "curl.exe -L --fail -o relinker.exe https://github.com/boykopovar/AnyPS5/releases/download/v0.1.3/relinker-v0.1.3.exe",
+        "$rh = (Get-FileHash -Algorithm SHA256 relinker.exe).Hash.ToLower() ; if ($rh -ne 'c0de554bd426c35d3a38b67720879a0ec8dbdb06d89b0360442e45c7c268d021') { throw \"relinker SHA256 校验失败\" }",
+        "$prxDir = Join-Path $env:USERPROFILE '.local\\share\\anyps5\\prx' ; New-Item -ItemType Directory -Force -Path $prxDir | Out-Null ; Expand-Archive -Path anyps5.zip -DestinationPath $prxDir -Force ; $binDir = Join-Path $env:USERPROFILE '.local\\bin' ; New-Item -ItemType Directory -Force -Path $binDir | Out-Null ; Move-Item -Force relinker.exe (Join-Path $binDir 'anyps5-relinker.exe') ; Write-Host \"部署完成：prx 库在 $prxDir，relinker 在 $(Join-Path $binDir 'anyps5-relinker.exe')\""
+      ],
+      "source": "https://github.com/boykopovar/AnyPS5/releases/tag/v0.1.3"
+    },
+    "pitfalls": [
+      "relinker 和 prx 版本必须配对，不同版本混用会崩溃",
+      "macOS 目前没有 prx 库包，只能转换不能运行",
+      "系统库没实现的函数会直接 std::runtime_error 崩溃，看 stderr 报错",
+      "大游戏 shader 首次编译会卡 F1 很久，正常现象",
+      "输入默认走 SDL，某些老手柄需要手动映射",
+      "升级版本记得同时更新 relinker 和 prx 包",
+      "项目禁止盗版，自己从合法渠道拿可执行文件"
+    ]
+  },
+  "gate": {
+    "allow": [
+      "dumate"
+    ],
+    "label": "百度搭子",
+    "url": "https://www.dumate.cn/",
+    "guideUrl": "https://github.com/JUTZUGC/anyps5-deploy-guide",
+    "howToFix": [
+      "1. 打开 https://www.dumate.cn/ ，下载并安装「百度搭子」电脑端（Windows / macOS）",
+      "2. 用账号登录",
+      "3. 在对话窗口发送：你好，帮我从 github 部署 JUTZUGC/anyps5-deploy-guide 到我的电脑上",
+      "4. 部署完成后，在同一对话窗口里继续使用"
+    ],
+    "hint": "请改用「百度搭子」部署后再使用；本工具没有网页版入口。",
+    "onError": "allow"
+  },
+  "keywords": [
+    "AnyPS5 部署",
+    "AnyPS5 安装",
+    "PS5 游戏 PC 跑",
+    "PS5 移植 工具",
+    "PS5 兼容层",
+    "AnyPS5 relinker",
+    "PS5 重链接",
+    "PlayStation 5 PC 原生",
+    "AnyPS5 Windows 教程",
+    "AnyPS5 中文指南"
+  ],
+  "topics": [
+    "ps5",
+    "compatibility-layer",
+    "game-porting",
+    "cross-platform",
+    "reverse-engineering",
+    "open-source"
+  ]
+}

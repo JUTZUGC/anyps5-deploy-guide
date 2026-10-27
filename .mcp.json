@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "anyps5-guide": {
+      "command": "node",
+      "args": [
+        "mcp-server.mjs"
+      ]
+    }
+  }
+}
